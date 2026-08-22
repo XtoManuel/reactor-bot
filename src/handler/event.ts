@@ -27,16 +27,38 @@ export default async function loadEvents(client: CustomClient): Promise<void> {
 
     // Loop through each event file
     for (const file of eventFiles) {
-        // Import the event file dynamically
-        const { default: event } = await import(`../events/${file}`);
-        const eventName = file.split(".")[0];
+        try {
+            console.log(`🔄 Cargando evento: ${file}`);
 
-        if (eventName) {
-            // Bind the event to the client
-            client.on(eventName, event.bind(null, client));
-            events.include.push(eventName);
-        } else {
-            events.exclude.push(eventName);
+            const module = await import(`../events/${file}`);
+            const event = module.default;
+
+            const eventName = file.split(".")[0];
+
+            console.log({
+                file,
+                eventName,
+                eventType: typeof event,
+                event
+            });
+
+            if (typeof event !== "function") {
+                throw new TypeError(`El evento "${file}" no exporta una función por defecto. Tipo recibido: ${typeof event}`);
+            }
+
+            if (eventName) {
+                client.on(eventName, event.bind(null, client));
+
+                events.include.push(eventName);
+
+                console.log(`✅ Evento cargado: ${eventName}`);
+            } else {
+                events.exclude.push(file);
+            }
+        } catch (error) {
+            console.error(`❌ Error cargando el evento: ${file}`, error);
+
+            events.exclude.push(file);
         }
     }
 
