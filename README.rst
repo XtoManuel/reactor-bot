@@ -20,11 +20,11 @@ Usage
 
 ::
 
-	poll: Is F# better than Python?
+	/ Is F# better than Python?
 
 *The bot will add 👍, 👎, and 🤷 (shrug) as reactions* ::
 
-	poll: Where should we go for pizza?
+	/ Where should we go for pizza?
 	A Domino's
 	B Papa John's (papa bless)
 	C Giordano's
@@ -34,19 +34,19 @@ Usage
 
 You can also use right-parens and other emoji ::
 
-	poll: How should I punctuate whomstve?
+	/ How should I punctuate whomstve?
 	🤔) whomst've
 	:thonking:) whom'st've
 	🅱️) w'h'o'm's't've
-	
+
 
 *🤔, \:thonking\: (if your server has it), 🅱️, and 🤷 will be added as reactions*
 
 
 If you have a certain channel for which every message should be a poll,
-you can use the command: poll:prefixless. It works like this:
+you can use the command: /commandless. It works like this:
 
-:code:`poll:prefixless #channel-here yes/no`
+:code:`/commandless #channel-here yes/no`
 
 If yes (or 1 or true), every message sent in that channel will be treated as a poll.
 You need the "manage roles" permission to change this setting.

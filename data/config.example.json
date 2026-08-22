@@ -1,22 +1,26 @@
 {
-	"release": "development",
-	"description": "A bot that lets you easily create reaction polls using any emoji or yes/no/shrug",
+    "release": "development",
+    "description": "A bot that lets you easily create reaction polls using any emoji or yes/no/shrug",
 
-	"prefixes": ["poll:"],
+    "prefixes": ["/"],
 
-	"support_server_invite_code": "",
+    "support_server_invite_code": "",
 
-	"database": {
-		"user": "reactor",
-		"password": "hunter2",
-		"database": "reactor",
-		"host": "127.0.0.1"},
+    "database": {
+        "user": "reactor",
+        "password": "hunter2",
+        "database": "reactor",
+        "host": "127.0.0.1"
+    },
 
-	"tokens": {
-		"discord": "se.krit.token",
+    "tokens": {
+        "discord": "se.krit.token",
 
-		"stats": {
-			"bots.discord.pw": null,
-			"discordbots.org": null}},
+        "stats": {
+            "bots.discord.pw": null,
+            "discordbots.org": null
+        }
+    },
 
-	"success_or_failure_emojis": {"False": "\u274c", "True": "\u2705"}}
+    "success_or_failure_emojis": { "False": "\u274c", "True": "\u2705" }
+}

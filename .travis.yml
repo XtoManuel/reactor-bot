@@ -1,16 +1,19 @@
-{
-    "dist": "bionic",
-    "language": "python",
-    "python": [
-        3.6,
-        3.7,
-        3.8
-    ],
-    "script": [
-        "pip install .[test] coveralls",
-        "pytest --cov reactor_bot tests/ --cov-branch"
-    ],
-    "after_script": [
-        "coveralls"
-    ]
-}
+# .travis.yml
+
+dist: focal
+
+language: node_js
+
+node_js:
+    - 20
+    - 22
+
+install:
+    - corepack enable
+    - pnpm install --frozen-lockfile
+
+script:
+    - pnpm test -- --coverage
+
+after_script:
+    - pnpm coverage:report
