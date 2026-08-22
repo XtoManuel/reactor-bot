@@ -6,30 +6,30 @@ import { commands } from "../data/dictionary.js";
 
 import { setPollEmoji, setCommandlessChannel, unsetCommandlessChannel } from "../database/poll.js";
 
-import { CustomClient } from "../types/CustomClient.js";
+import type { CustomClient } from "../types/CustomClient.js";
 
 export const command = {
     name: "commandless",
 
     data: new SlashCommandBuilder()
-
         .setName("commandless")
-
         .setDescription(commands?.commandless?.desc || "N/A")
 
+        // Las opciones obligatorias deben ir primero
+        .addBooleanOption(option =>
+            option
+                .setName("enabled")
+                .setDescription(commands?.commandless?.opts?.enabled || "N/A")
+                .setRequired(true)
+        )
+
+        // Opcionales después
         .addChannelOption(option =>
             option
                 .setName("channel")
                 .setDescription(commands?.commandless?.opts?.channel || "N/A")
                 .addChannelTypes(ChannelType.GuildText)
                 .setRequired(false)
-        )
-
-        .addBooleanOption(option =>
-            option
-                .setName("enabled")
-                .setDescription(commands?.commandless?.opts?.enabled || "N/A")
-                .setRequired(true)
         )
 
         .addStringOption(option =>
@@ -59,7 +59,6 @@ export const command = {
         if (!channel || channel.type !== ChannelType.GuildText) {
             await interaction.reply({
                 content: "❌ Debes seleccionar un canal de texto válido.",
-
                 flags: MessageFlags.Ephemeral
             });
 
@@ -69,7 +68,6 @@ export const command = {
         if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageChannels)) {
             await interaction.reply({
                 content: "❌ Necesitas el permiso `Gestionar canales` para usar este comando.",
-
                 flags: MessageFlags.Ephemeral
             });
 
@@ -79,9 +77,7 @@ export const command = {
         const enabled = interaction.options.getBoolean("enabled", true);
 
         const yes = interaction.options.getString("yes") ?? "👍🏻";
-
         const no = interaction.options.getString("no") ?? "👎🏻";
-
         const shrug = interaction.options.getString("shrug") ?? "🤷🏻";
 
         try {
@@ -114,7 +110,6 @@ export const command = {
 
             await interaction.reply({
                 content: "❌ No se pudo actualizar la configuración.",
-
                 flags: MessageFlags.Ephemeral
             });
         }
