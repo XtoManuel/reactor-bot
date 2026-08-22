@@ -7,36 +7,25 @@ import { CustomClient } from "../types/CustomClient.js";
 
 export interface PollEmoji {
     yes: string;
-
     no: string;
-
     shrug: string | null;
 }
 
 export interface ChannelOptions {
     channelId: string;
-
-    guildId: string;
 }
 
-export interface SetPollEmojiOptions {
-    channelId: string;
-
+export type GuildChannelOptions = ChannelOptions & {
     guildId: string;
+};
 
-    yes: string;
-
-    no: string;
-
-    shrug: string | null;
-}
-
-// src/database/poll.ts
+export type SetPollEmojiOptions = GuildChannelOptions & PollEmoji;
 
 export async function setPollEmoji(pool: Pool, options: SetPollEmojiOptions): Promise<void> {
     const { channelId, guildId, yes, no, shrug } = options;
 
     const convertedYes = convertShortcode(yes);
+
     const convertedNo = convertShortcode(no);
 
     const convertedShrug = !shrug || shrug.toLowerCase() === "none" ? null : convertShortcode(shrug);
@@ -51,6 +40,7 @@ export async function setPollEmoji(pool: Pool, options: SetPollEmojiOptions): Pr
                 shrug
             )
             VALUES ($1, $2, $3, $4, $5)
+
             ON CONFLICT (channel)
             DO UPDATE SET
                 guild = EXCLUDED.guild,
@@ -80,7 +70,7 @@ export async function getPollEmoji(pool: Pool, options: ChannelOptions): Promise
     return result.rows[0] ?? null;
 }
 
-export async function setCommandlessChannel(pool: Pool, options: ChannelOptions): Promise<void> {
+export async function setCommandlessChannel(pool: Pool, options: GuildChannelOptions): Promise<void> {
     const { channelId, guildId } = options;
 
     await pool.query(
@@ -90,6 +80,7 @@ export async function setCommandlessChannel(pool: Pool, options: ChannelOptions)
                 guild
             )
             VALUES ($1, $2)
+
             ON CONFLICT (channel)
             DO UPDATE SET
                 guild = EXCLUDED.guild

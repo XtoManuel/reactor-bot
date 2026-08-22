@@ -98,8 +98,7 @@ export const command = {
                 });
             } else {
                 await unsetCommandlessChannel(pool, {
-                    channelId: channel.id,
-                    guildId: interaction.guildId!
+                    channelId: channel.id
                 });
             }
 

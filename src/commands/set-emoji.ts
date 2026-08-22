@@ -99,7 +99,7 @@ export const command = {
                 shrug = current?.shrug ?? "🤷🏻";
             }
 
-            await setPollEmoji(client.pool, { channelId: channel.id, yes, no, shrug });
+            await setPollEmoji(client.pool, { channelId: channel.id, guildId: interaction.guildId!, yes, no, shrug });
 
             await interaction.reply({
                 content: `✅ Los emojis de las encuestas para ${channel} ` + "se han actualizado correctamente."
