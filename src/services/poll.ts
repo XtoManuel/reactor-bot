@@ -59,7 +59,8 @@ export async function createReactionPoll(
         // 2. Intentamos obtener los emojis específicos del canal.
 
         const channelEmoji = await getChannelPollEmoji(client.pool, {
-            channelId: message.channel.id
+            channelId: message.channel.id,
+            guildId: message.guildId!
         });
 
         // 3. Si no hay configuración en el canal, usamos

@@ -6,6 +6,8 @@ import type { CustomClient } from "../types/CustomClient.js";
 
 import config from "../utils/config.js";
 
+import { migrateChannelGuilds } from "../database/poll.js";
+
 function serializeCommandData(data: unknown): unknown {
     if (typeof data === "object" && data !== null && "toJSON" in data && typeof data.toJSON === "function") {
         return data.toJSON();
@@ -70,13 +72,18 @@ export default async function clientReady(client: CustomClient): Promise<void> {
             throw new Error("Bot token not found in config.");
         }
 
+        console.log("🔄 Comprobando migración de canales...");
+
+        await migrateChannelGuilds(client, client.pool);
+
         const rest = new REST().setToken(config.tokens.discord);
 
         const commands = await registerCommands(client, rest);
 
         console.log(`✅ Slash commands cargados: ${(commands as unknown[]).length}`);
     } catch (error) {
-        console.error("❌ Error al cargar los slash commands:");
+        console.error("❌ Error al iniciar el bot:");
+
         console.error(error);
     }
 }

@@ -85,18 +85,21 @@ export const command = {
 
             if (enabled) {
                 await setCommandlessChannel(pool, {
-                    channelId: channel.id
+                    channelId: channel.id,
+                    guildId: interaction.guildId!
                 });
 
                 await setPollEmoji(pool, {
                     channelId: channel.id,
+                    guildId: interaction.guildId!,
                     yes,
                     no,
                     shrug
                 });
             } else {
                 await unsetCommandlessChannel(pool, {
-                    channelId: channel.id
+                    channelId: channel.id,
+                    guildId: interaction.guildId!
                 });
             }
 

@@ -82,7 +82,8 @@ export const command = {
                         }
 
                         const emojis = await getPollEmoji(client.pool, {
-                            channelId
+                            channelId,
+                            guildId: interaction.guildId!
                         });
 
                         const customEmoji =
