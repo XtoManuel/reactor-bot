@@ -33,7 +33,7 @@ function getShortcodes(): Map<string, string> {
     for (const emojis of Object.values(shortcodes)) {
         for (const emoji of emojis) {
             for (const name of emoji.names) {
-                flattenedShortcodes.set(name, emoji.surrogates);
+                flattenedShortcodes.set(name.toLowerCase(), emoji.surrogates);
             }
         }
     }
@@ -44,7 +44,7 @@ function getShortcodes(): Map<string, string> {
 export const SHORTCODES = getShortcodes();
 
 export function convertShortcode(emoji: string): string {
-    const shortcode = emoji.replace(/^:|:$/g, "");
+    const shortcode = emoji.trim().replace(/^:/, "").replace(/:$/, "").toLowerCase();
 
     return SHORTCODES.get(shortcode) ?? emoji;
 }
@@ -114,22 +114,29 @@ export function extractEmoji(line: string): string {
 }
 
 export function parseEmoji(text: string): string {
+    const trimmed = text.trim();
+
     // Emoji personalizado del servidor.
-    const customEmojiMatch = new RegExp(/^<(a?:\w+:\d+)>/u).exec(text);
+    const customEmojiMatch = /^<(a?:\w+:\d+)>$/u.exec(trimmed);
 
     if (customEmojiMatch) {
         return customEmojiMatch[1];
     }
 
-    if (ASCII_LETTERS.has(text)) {
-        return getLetterEmoji(text.toUpperCase());
+    // Shortcodes como :one:, :two:, :smile:, etc.
+    if (/^:[\w+-]+:$/u.test(trimmed)) {
+        return convertShortcode(trimmed);
     }
 
-    if (ASCII_DIGITS.has(text)) {
-        return getDigitEmoji(text);
+    if (ASCII_LETTERS.has(trimmed)) {
+        return getLetterEmoji(trimmed.toUpperCase());
     }
 
-    return text;
+    if (ASCII_DIGITS.has(trimmed)) {
+        return getDigitEmoji(trimmed);
+    }
+
+    return trimmed;
 }
 
 export function getLetterEmoji(letter: string): string {
