@@ -6,12 +6,20 @@ import type { CustomClient } from "../types/CustomClient.js";
 
 import config from "../utils/config.js";
 
+function serializeCommandData(data: unknown): unknown {
+    if (typeof data === "object" && data !== null && "toJSON" in data && typeof data.toJSON === "function") {
+        return data.toJSON();
+    }
+
+    return data;
+}
+
 async function registerCommands(client: CustomClient, rest: REST): Promise<unknown> {
     const commands = Array.from(client.commands.values())
         .filter(command => command?.data)
         .map(command => ({
             name: command.name,
-            data: command.data.toJSON()
+            data: serializeCommandData(command.data)
         }));
 
     try {
@@ -30,7 +38,7 @@ async function registerCommands(client: CustomClient, rest: REST): Promise<unkno
                     body: [command.data]
                 });
             } catch (commandError) {
-                console.error(`\n❌ Comando problemático: /${command.name}`);
+                console.error(`❌ Comando problemático: /${command.name}`);
                 console.error(commandError);
             }
         }
