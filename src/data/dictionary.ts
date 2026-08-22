@@ -29,17 +29,17 @@ export const commands = {
             message: {
                 desc: "Crea una encuesta mediante un mensaje.",
                 opts: {
-                    content: "Contenido de la encuesta.",
-                    noshrug: "No añadir la reacción 🤷."
+                    content: "Contenido de la encuesta. Usa `\\n` para saltos de línea.",
+                    noshrug: "No añadir la reacción 🤷🏻."
                 }
             },
             embed: {
                 desc: "Crea una encuesta mediante un embed.",
                 opts: {
-                    description: "Contenido de la encuesta.",
+                    description: "Contenido de la encuesta. Usa `\\n` para saltos de línea.",
                     title: "Título del embed.",
                     color: "Color del embed en formato hexadecimal.",
-                    noshrug: "No añadir la reacción 🤷."
+                    noshrug: "No añadir la reacción 🤷🏻."
                 }
             }
         }
