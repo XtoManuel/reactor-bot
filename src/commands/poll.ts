@@ -94,7 +94,7 @@ export const command = {
         const noShrug = interaction.options.getBoolean("noshrug") ?? false;
 
         if (subcommand === "message") {
-            const content = interaction.options.getString("content", true);
+            const content = parseNewlines(interaction.options.getString("content", true));
 
             await interaction.deferReply({
                 flags: MessageFlags.Ephemeral
@@ -114,11 +114,11 @@ export const command = {
         }
 
         if (subcommand === "embed") {
-            const description = interaction.options.getString("description", true);
+            const description = parseNewlines(interaction.options.getString("description", true));
 
             const title = interaction.options.getString("title");
 
-            const color = interaction.options.getString("color");
+            const color = interaction.options.getString("color") ?? "#000000";
 
             const embed = new EmbedBuilder().setDescription(description);
 
@@ -167,3 +167,7 @@ export const command = {
         }
     }
 };
+
+function parseNewlines(text: string): string {
+    return text.replaceAll(String.raw`\n`, "\n");
+}
