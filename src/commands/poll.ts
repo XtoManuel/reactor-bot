@@ -5,6 +5,7 @@ import {
     ColorResolvable,
     EmbedBuilder,
     LabelBuilder,
+    MessageFlags,
     ModalBuilder,
     ModalSubmitInteraction,
     SlashCommandBuilder,
@@ -129,7 +130,7 @@ export async function handlePollModal(interaction: ModalSubmitInteraction) {
         const content = interaction.fields.getTextInputValue("content");
 
         await interaction.deferReply({
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
 
         const pollMessage = await (interaction.channel as TextChannel).send(content);
@@ -173,7 +174,7 @@ export async function handlePollModal(interaction: ModalSubmitInteraction) {
         }
 
         await interaction.deferReply({
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
 
         const pollMessage = await (interaction.channel as TextChannel).send({

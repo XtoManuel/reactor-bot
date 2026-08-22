@@ -148,21 +148,13 @@ export async function setDefaultPollEmoji(
     );
 }
 
-export async function getDefaultPollEmoji(
-    pool: Pool,
-    options: { guildId: string }
-): Promise<{
-    yes: string;
-    no: string;
-    shrug: string | null;
-} | null> {
-    const result = await pool.query<{
-        yes: string;
-        no: string;
-        shrug: string | null;
-    }>(
+export async function getDefaultPollEmoji(pool: Pool, options: { guildId: string }): Promise<PollEmoji | null> {
+    const result = await pool.query<PollEmoji>(
         `
-            SELECT yes, no, shrug
+            SELECT
+                yes,
+                no,
+                shrug
             FROM default_poll_emoji
             WHERE guild = $1
         `,

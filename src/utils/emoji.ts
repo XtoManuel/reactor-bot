@@ -49,6 +49,8 @@ export function convertShortcode(emoji: string): string {
     return SHORTCODES.get(shortcode) ?? emoji;
 }
 
+// src/utils/emoji.ts
+
 export function* getPollEmoji(
     message: string,
     options: {
@@ -65,21 +67,29 @@ export function* getPollEmoji(
     // Ignorar la primera línea.
     // Máximo 19 líneas si usamos shrug.
     // Máximo 20 si no lo usamos.
-    const lines = message.split("\n").slice(1, 21 - Number(shrug));
+    const lines = message
+        .split("\n")
+        .slice(1, 21 - Number(shrug))
+        .map(line => line.trim())
+        .filter(Boolean);
 
+    // Si hay opciones, usar los emojis escritos
+    // al comienzo de cada línea.
     if (lines.length > 0) {
         for (const line of lines) {
-            if (line) {
-                yield parseStartingEmoji(line);
-            }
+            yield parseStartingEmoji(line);
         }
     } else {
+        // Si no hay opciones, usar los emojis
+        // configurados para el canal/servidor.
         yield emojiSet.yes;
         yield emojiSet.no;
     }
 
+    // Marca el final de las opciones principales.
     yield END_OF_POLL_EMOJI;
 
+    // Añadir shrug después de las opciones.
     if (shrug && emojiSet.shrug) {
         yield emojiSet.shrug;
     }

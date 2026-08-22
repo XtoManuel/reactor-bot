@@ -17,7 +17,9 @@ export async function reactSafe(message: Message, reaction: string): Promise<boo
         await message.react(reaction);
 
         return true;
-    } catch {
+    } catch (error) {
+        console.error(`❌ No se pudo añadir la reacción ${reaction} al mensaje ${message.id}:`, error);
+
         return false;
     }
 }
@@ -32,72 +34,87 @@ interface CreateReactionPollOptions {
 
         shrug: string | null;
     };
+
+    forceDefaultReactions?: boolean;
 }
 
 export async function createReactionPoll(
     client: CustomClient,
-
     message: Message,
-
     options: CreateReactionPollOptions = {}
 ): Promise<void> {
     const content = message.content;
-
-    // Si se pasa options.shrug, tiene prioridad.
-    // Si no se pasa, comprobamos los keywords del mensaje.
 
     const shrug = options.shrug ?? ![...NOSHRUG_KEYWORDS].some(keyword => content.toLowerCase().includes(keyword));
 
     let emojiSet;
 
-    // 1. Si se proporcionan emojis manualmente mediante options,
-    // tienen máxima prioridad.
-
+    // 1. Emojis proporcionados manualmente
     if (options.emojiSet) {
         emojiSet = options.emojiSet;
     } else {
-        // 2. Intentamos obtener los emojis específicos del canal.
-
+        // 2. Configuración específica del canal
         const channelEmoji = await getChannelPollEmoji(client.pool, {
             channelId: message.channel.id
         });
 
-        // 3. Si no hay configuración en el canal, usamos
-        // los emojis por defecto del servidor.
-
+        // 3. Configuración del servidor
         const guildEmoji =
-            !channelEmoji && message.guildId ? await getDefaultPollEmoji(client.pool, { guildId: message.guildId }) : null;
+            !channelEmoji && message.guildId
+                ? await getDefaultPollEmoji(client.pool, {
+                      guildId: message.guildId
+                  })
+                : null;
 
-        // 4. Prioridad:
-        //
-        // Canal
-        //   ↓
-        // Servidor
-        //   ↓
-        // Bot
-
+        // 4. Canal → Servidor → Global
         const selectedEmoji = channelEmoji ?? guildEmoji ?? DEFAULT_EMOJIS;
-
-        // yes y no siempre existen.
-        // shrug puede ser null.
 
         emojiSet = {
             yes: selectedEmoji.yes,
+
             no: selectedEmoji.no,
+
             shrug: selectedEmoji.shrug ?? null
         };
     }
 
     const seenReactions = new Set<string>();
 
+    const addReaction = async (reaction: string) => {
+        if (seenReactions.has(reaction)) {
+            return;
+        }
+
+        if (await reactSafe(message, reaction)) {
+            seenReactions.add(reaction);
+        }
+    };
+
+    /*
+     * Las encuestas creadas explícitamente mediante /poll
+     * siempre deben recibir los emojis principales.
+     */
+    if (options.forceDefaultReactions) {
+        await addReaction(emojiSet.yes);
+
+        await addReaction(emojiSet.no);
+
+        if (shrug && emojiSet.shrug) {
+            await addReaction(emojiSet.shrug);
+        }
+
+        return;
+    }
+
+    /*
+     * Encuestas detectadas automáticamente desde el contenido.
+     */
     for (const reaction of getPollEmoji(content, {
         shrug,
 
         emojiSet
     })) {
         if (reaction === END_OF_POLL_EMOJI) {
-            // No hubo ninguna reacción válida.
-
             if (seenReactions.size === 0) {
                 return;
             }
@@ -109,12 +126,6 @@ export async function createReactionPoll(
             continue;
         }
 
-        if (seenReactions.has(reaction)) {
-            continue;
-        }
-
-        if (await reactSafe(message, reaction)) {
-            seenReactions.add(reaction);
-        }
+        await addReaction(reaction);
     }
 }
