@@ -34,8 +34,6 @@ export default async function interactionCreate(client: CustomClient, interactio
 
             await safeReplyError(interaction);
         }
-
-        return;
     }
 }
 

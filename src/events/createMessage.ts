@@ -8,6 +8,8 @@ import { createReactionPoll } from "../services/poll.js";
 
 import type { CustomClient } from "../types/CustomClient.js";
 
+import config from "../utils/config.js";
+
 const COMMANDLESS_DISABLE_EMOJIS = ["💬", "🗨️", "<:pensive_speech_balloon:555620427742052365>"];
 
 export default async function messageCreate(client: CustomClient, msg: Message) {
@@ -23,6 +25,12 @@ export default async function messageCreate(client: CustomClient, msg: Message) 
 
     // Solo canales de texto
     if (!msg.channel.isTextBased()) {
+        return;
+    }
+
+    if (config.prefixes.some(prefix => msg.content.startsWith(prefix))) {
+        await createReactionPoll(client as CustomClient, msg);
+
         return;
     }
 
