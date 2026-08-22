@@ -4,6 +4,7 @@
     "description": "The best dang Discord poll bot around™",
     "author": "Io Mintz",
     "license": "MIT",
+    "type": "module",
     "repository": {
         "type": "git",
         "url": "https://github.com/iomintz/reactor-bot.git"
