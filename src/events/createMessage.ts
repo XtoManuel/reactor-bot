@@ -10,35 +10,33 @@ import type { CustomClient } from "../types/CustomClient.js";
 
 const COMMANDLESS_DISABLE_EMOJIS = ["💬", "🗨️", "<:pensive_speech_balloon:555620427742052365>"];
 
-export default async function createMessage(message: Message) {
+export default async function messageCreate(client: CustomClient, msg: Message) {
     // Ignorar mensajes de bots
-    if (message.author.bot) {
+    if (msg.author.bot) {
         return;
     }
 
     // Solo funcionar dentro de servidores
-    if (!message.guild) {
+    if (!msg.guild) {
         return;
     }
 
     // Solo canales de texto
-    if (!message.channel.isTextBased()) {
+    if (!msg.channel.isTextBased()) {
         return;
     }
-
-    const client = message.client as CustomClient;
 
     // Estos emojis permiten enviar un mensaje normal
     // dentro de un canal command.
-    if (COMMANDLESS_DISABLE_EMOJIS.some(emoji => message.content.startsWith(emoji))) {
+    if (COMMANDLESS_DISABLE_EMOJIS.some(emoji => msg.content.startsWith(emoji))) {
         return;
     }
 
-    const commandless = await isCommandlessChannel(client.pool, { channelId: message.channel.id });
+    const commandless = await isCommandlessChannel(client.pool, { channelId: msg.channel.id });
 
     if (!commandless) {
         return;
     }
 
-    await createReactionPoll(client, message);
+    await createReactionPoll(client, msg);
 }
