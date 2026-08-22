@@ -1,8 +1,6 @@
 import { Interaction, MessageFlags, TextChannel } from "discord.js";
 import { CustomClient } from "../types/CustomClient.js";
 
-import { handlePollModal } from "../commands/poll.js";
-
 export default async function interactionCreate(client: CustomClient, interaction: Interaction): Promise<void> {
     // ─── Slash Command ─────────────────────────────
 
@@ -38,25 +36,6 @@ export default async function interactionCreate(client: CustomClient, interactio
         }
 
         return;
-    }
-
-    // ─── Modal ─────────────────────────────────────
-
-    if (interaction.isModalSubmit()) {
-        // No proceses modales en DMs
-        if (!interaction.guild) {
-            return;
-        }
-
-        try {
-            if (interaction.customId.startsWith("poll_message:") || interaction.customId.startsWith("poll_embed:")) {
-                await handlePollModal(interaction);
-            }
-        } catch (error: unknown) {
-            console.error(`Error procesando el modal ${interaction.customId}:`, error instanceof Error ? error.stack : error);
-
-            await safeReplyError(interaction);
-        }
     }
 }
 

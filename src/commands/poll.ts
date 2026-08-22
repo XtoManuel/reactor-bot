@@ -4,23 +4,14 @@ import {
     ChatInputCommandInteraction,
     ColorResolvable,
     EmbedBuilder,
-    LabelBuilder,
     MessageFlags,
-    ModalBuilder,
-    ModalSubmitInteraction,
     SlashCommandBuilder,
-    TextChannel,
-    TextInputBuilder,
-    TextInputStyle
+    TextChannel
 } from "discord.js";
 
 import { createReactionPoll } from "../services/poll.js";
-
 import { commands } from "../data/dictionary.js";
-import { CustomClient } from "../types/CustomClient.js";
-
-const MESSAGE_MODAL_PREFIX = "poll_message:";
-const EMBED_MODAL_PREFIX = "poll_embed:";
+import type { CustomClient } from "../types/CustomClient.js";
 
 export const command = {
     name: "poll",
@@ -35,6 +26,15 @@ export const command = {
             subcommand
                 .setName("message")
                 .setDescription(commands?.poll?.subcommands?.message?.desc || "N/A")
+
+                .addStringOption(option =>
+                    option
+                        .setName("content")
+                        .setDescription(commands?.poll?.subcommands?.message?.opts?.content || "N/A")
+                        .setRequired(true)
+                        .setMaxLength(2000)
+                )
+
                 .addBooleanOption(option =>
                     option
                         .setName("noshrug")
@@ -47,6 +47,22 @@ export const command = {
             subcommand
                 .setName("embed")
                 .setDescription(commands?.poll?.subcommands?.embed?.desc || "N/A")
+
+                .addStringOption(option =>
+                    option
+                        .setName("description")
+                        .setDescription(commands?.poll?.subcommands?.embed?.opts?.description || "N/A")
+                        .setRequired(true)
+                        .setMaxLength(4000)
+                )
+
+                .addStringOption(option =>
+                    option
+                        .setName("title")
+                        .setDescription(commands?.poll?.subcommands?.embed?.opts?.title || "N/A")
+                        .setRequired(false)
+                        .setMaxLength(256)
+                )
 
                 .addStringOption(option =>
                     option
@@ -64,129 +80,90 @@ export const command = {
         ),
 
     async run(interaction: ChatInputCommandInteraction) {
+        if (!interaction.channel?.isTextBased()) {
+            await interaction.reply({
+                content: "❌ Este comando solo puede utilizarse en un canal de texto.",
+                flags: MessageFlags.Ephemeral
+            });
+
+            return;
+        }
+
         const subcommand = interaction.options.getSubcommand();
 
-        // Por defecto: añadir 🤷
         const noShrug = interaction.options.getBoolean("noshrug") ?? false;
 
         if (subcommand === "message") {
-            const modal = new ModalBuilder().setCustomId(`${MESSAGE_MODAL_PREFIX}${noShrug}`).setTitle("Crear encuesta");
+            const content = interaction.options.getString("content", true);
 
-            const contentInput = new TextInputBuilder()
-                .setCustomId("content")
-                .setStyle(TextInputStyle.Paragraph)
-                .setRequired(true)
-                .setMaxLength(2000);
+            await interaction.deferReply({
+                flags: MessageFlags.Ephemeral
+            });
 
-            const contentLabel = new LabelBuilder().setLabel("Contenido de la encuesta").setTextInputComponent(contentInput);
+            const pollMessage = await (interaction.channel as TextChannel).send(content);
 
-            modal.addLabelComponents(contentLabel);
+            await createReactionPoll(interaction.client as CustomClient, pollMessage, {
+                shrug: !noShrug
+            });
 
-            await interaction.showModal(modal);
+            await interaction.editReply({
+                content: "✅ Encuesta creada correctamente."
+            });
 
             return;
         }
 
         if (subcommand === "embed") {
-            const color = interaction.options.getString("color") ?? "000000";
+            const description = interaction.options.getString("description", true);
 
-            const modal = new ModalBuilder()
-                .setCustomId(`${EMBED_MODAL_PREFIX}${noShrug}:${encodeURIComponent(color)}`)
-                .setTitle("Crear encuesta con embed");
+            const title = interaction.options.getString("title");
 
-            const titleInput = new TextInputBuilder()
-                .setCustomId("title")
-                .setStyle(TextInputStyle.Short)
-                .setRequired(false)
-                .setMaxLength(256);
+            const color = interaction.options.getString("color");
 
-            const descriptionInput = new TextInputBuilder()
-                .setCustomId("description")
-                .setStyle(TextInputStyle.Paragraph)
-                .setRequired(true)
-                .setMaxLength(4000);
+            const embed = new EmbedBuilder().setDescription(description);
 
-            const titleLabel = new LabelBuilder().setLabel("Título").setTextInputComponent(titleInput);
+            if (title) {
+                embed.setTitle(title);
+            }
 
-            const descriptionLabel = new LabelBuilder().setLabel("Contenido").setTextInputComponent(descriptionInput);
+            if (color) {
+                try {
+                    embed.setColor(color as ColorResolvable);
+                } catch {
+                    console.warn(`Color inválido para la encuesta: ${color}`);
+                }
+            }
 
-            modal.addLabelComponents(titleLabel, descriptionLabel);
+            await interaction.deferReply({
+                flags: MessageFlags.Ephemeral
+            });
 
-            await interaction.showModal(modal);
+            const pollMessage = await (interaction.channel as TextChannel).send({
+                embeds: [embed]
+            });
+
+            /*
+             * Para los embeds usamos el título y la descripción
+             * como texto a analizar para detectar los emojis.
+             */
+            const analysisContent = [title, description].filter(Boolean).join("\n");
+
+            /*
+             * Sobrescribimos temporalmente el contenido utilizado
+             * para el análisis pasando una copia conceptual del mensaje.
+             *
+             * Si createReactionPoll solo analiza message.content,
+             * conviene añadir soporte para content en sus opciones.
+             */
+            await createReactionPoll(interaction.client as CustomClient, pollMessage, {
+                shrug: !noShrug,
+
+                analysisContent
+            });
+
+            await interaction.editReply({
+                content: "✅ Encuesta creada correctamente."
+            });
         }
     }
 };
-
-export async function handlePollModal(interaction: ModalSubmitInteraction) {
-    if (!interaction.channel?.isTextBased()) {
-        return;
-    }
-
-    const { customId } = interaction;
-
-    if (customId.startsWith(MESSAGE_MODAL_PREFIX)) {
-        const noShrug = customId.replace(MESSAGE_MODAL_PREFIX, "") === "true";
-
-        const content = interaction.fields.getTextInputValue("content");
-
-        await interaction.deferReply({
-            flags: MessageFlags.Ephemeral
-        });
-
-        const pollMessage = await (interaction.channel as TextChannel).send(content);
-
-        await createReactionPoll(interaction.client as CustomClient, pollMessage, {
-            shrug: !noShrug
-        });
-
-        await interaction.editReply({
-            content: "✅ Encuesta creada correctamente."
-        });
-
-        return;
-    }
-
-    if (customId.startsWith(EMBED_MODAL_PREFIX)) {
-        const data = customId.replace(EMBED_MODAL_PREFIX, "");
-
-        const [noShrugValue, encodedColor] = data.split(":");
-
-        const noShrug = noShrugValue === "true";
-
-        const color = decodeURIComponent(encodedColor ?? "");
-
-        const title = interaction.fields.getTextInputValue("title");
-
-        const description = interaction.fields.getTextInputValue("description");
-
-        const embed = new EmbedBuilder().setDescription(description);
-
-        if (title) {
-            embed.setTitle(title);
-        }
-
-        if (color) {
-            try {
-                embed.setColor(color as ColorResolvable);
-            } catch {
-                console.warn(`Color inválido para la encuesta: ${color}`);
-            }
-        }
-
-        await interaction.deferReply({
-            flags: MessageFlags.Ephemeral
-        });
-
-        const pollMessage = await (interaction.channel as TextChannel).send({
-            embeds: [embed]
-        });
-
-        await createReactionPoll(interaction.client as CustomClient, pollMessage, {
-            shrug: !noShrug
-        });
-
-        await interaction.editReply({
-            content: "✅ Encuesta creada correctamente."
-        });
-    }
-}

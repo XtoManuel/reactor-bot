@@ -29,13 +29,11 @@ interface CreateReactionPollOptions {
 
     emojiSet?: {
         yes: string;
-
         no: string;
-
         shrug: string | null;
     };
 
-    forceDefaultReactions?: boolean;
+    analysisContent?: string;
 }
 
 export async function createReactionPoll(
@@ -43,7 +41,7 @@ export async function createReactionPoll(
     message: Message,
     options: CreateReactionPollOptions = {}
 ): Promise<void> {
-    const content = message.content;
+    const content = options.analysisContent ?? message.content;
 
     const shrug = options.shrug ?? ![...NOSHRUG_KEYWORDS].some(keyword => content.toLowerCase().includes(keyword));
 
@@ -89,22 +87,6 @@ export async function createReactionPoll(
             seenReactions.add(reaction);
         }
     };
-
-    /*
-     * Las encuestas creadas explícitamente mediante /poll
-     * siempre deben recibir los emojis principales.
-     */
-    if (options.forceDefaultReactions) {
-        await addReaction(emojiSet.yes);
-
-        await addReaction(emojiSet.no);
-
-        if (shrug && emojiSet.shrug) {
-            await addReaction(emojiSet.shrug);
-        }
-
-        return;
-    }
 
     /*
      * Encuestas detectadas automáticamente desde el contenido.
