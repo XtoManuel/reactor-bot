@@ -240,3 +240,36 @@ export async function migrateChannelGuilds(client: CustomClient, pool: Pool): Pr
 
     console.log("✅ Migración de servidores de canales completada.");
 }
+
+export async function getPollEmojiChannels(
+    pool: Pool,
+    options: { guildId: string }
+): Promise<{ channelId: string; emojis: PollEmoji }[]> {
+    const result = await pool.query<{
+        channel: string;
+        yes: string;
+        no: string;
+        shrug: string | null;
+    }>(
+        `
+            SELECT
+                channel,
+                yes,
+                no,
+                shrug
+            FROM poll_emoji
+            WHERE guild = $1
+            ORDER BY channel
+        `,
+        [options.guildId]
+    );
+
+    return result.rows.map(row => ({
+        channelId: row.channel,
+        emojis: {
+            yes: row.yes,
+            no: row.no,
+            shrug: row.shrug
+        }
+    }));
+}

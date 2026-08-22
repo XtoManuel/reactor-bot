@@ -5,7 +5,8 @@ import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags, PermissionFlag
 import { commands } from "../data/dictionary.js";
 
 import type { CustomClient } from "../types/CustomClient.js";
-import { getCommandlessChannels, getDefaultPollEmoji, getPollEmoji } from "../database/poll.js";
+
+import { getCommandlessChannels, getDefaultPollEmoji, getPollEmojiChannels } from "../database/poll.js";
 
 import { DEFAULT_EMOJIS } from "../config/defaults.js";
 
@@ -36,80 +37,112 @@ export const command = {
         const client = interaction.client as CustomClient;
 
         try {
-            // Obtener configuración por defecto del servidor
-            let defaultEmojis = await getDefaultPollEmoji(client.pool, { guildId: interaction.guild.id });
+            // ─── Configuración por defecto del servidor ─────────────
 
-            // Obtener canales commandless
+            const defaultEmojis = await getDefaultPollEmoji(client.pool, {
+                guildId: interaction.guild.id
+            });
+
+            const serverEmojis = defaultEmojis ?? DEFAULT_EMOJIS;
+
+            // ─── Canales commandless ───────────────────────────────
+
             const commandlessChannels = await getCommandlessChannels(client.pool, {
                 guildId: interaction.guild.id
             });
 
+            // ─── Canales con emojis personalizados ─────────────────
+
+            const emojiChannels = await getPollEmojiChannels(client.pool, {
+                guildId: interaction.guild.id
+            });
+
+            // ─── Preparar datos ────────────────────────────────────
+
+            const commandlessIds = new Set(commandlessChannels.map(({ channelId }) => channelId));
+
+            const emojiMap = new Map(emojiChannels.map(({ channelId, emojis }) => [channelId, emojis]));
+
+            // Combinar todos los canales sin duplicados
+            const channelIds = new Set([...commandlessIds, ...emojiMap.keys()]);
+
+            // ─── Crear embed ───────────────────────────────────────
+
             const embed = new EmbedBuilder().setTitle("⚙️ Configuración del servidor").setColor("Blurple");
 
-            if (defaultEmojis) {
-                embed.addFields({
-                    name: "Emojis por defecto",
-                    value: [
-                        `Sí: ${defaultEmojis.yes}`,
-                        `No: ${defaultEmojis.no}`,
-                        `Adicional: ${defaultEmojis.shrug ?? "Desactivado"}`
-                    ].join("\n")
-                });
-            } else {
-                embed.addFields({
-                    name: "Emojis por defecto",
-                    value: [
-                        "No hay configuración por defecto.\n",
-                        `Sí: ${DEFAULT_EMOJIS.yes}`,
-                        `No: ${DEFAULT_EMOJIS.no}`,
-                        `Adicional: ${DEFAULT_EMOJIS.shrug ?? "Desactivado"}`
-                    ].join("\n")
-                });
-            }
+            // ─── Emojis por defecto ────────────────────────────────
 
-            if (commandlessChannels.length === 0) {
+            embed.addFields({
+                name: "Emojis por defecto",
+
+                value: [
+                    defaultEmojis ? "Configuración personalizada." : "Usando configuración global.",
+
+                    `Sí: ${serverEmojis.yes}`,
+
+                    `No: ${serverEmojis.no}`,
+
+                    `Adicional: ${serverEmojis.shrug ?? "Desactivado"}`
+                ].join("\n")
+            });
+
+            // ─── Configuración de canales ──────────────────────────
+
+            if (channelIds.size === 0) {
                 embed.addFields({
-                    name: "Canales commandless",
-                    value: "No hay ningún canal configurado."
+                    name: "Configuración de canales",
+
+                    value: "No hay ningún canal con una configuración personalizada."
                 });
             } else {
                 const channels = await Promise.all(
-                    commandlessChannels.map(async ({ channelId }) => {
+                    [...channelIds].map(async channelId => {
                         const channel = interaction.guild?.channels.cache.get(channelId);
 
                         if (!channel) {
                             return null;
                         }
 
-                        const emojis = await getPollEmoji(client.pool, {
-                            channelId
-                        });
+                        const emojis = emojiMap.get(channelId);
 
-                        const customEmoji =
-                            emojis &&
-                            defaultEmojis &&
-                            (emojis.yes !== defaultEmojis.yes ||
-                                emojis.no !== defaultEmojis.no ||
-                                emojis.shrug !== defaultEmojis.shrug);
+                        const isCommandless = commandlessIds.has(channelId);
 
-                        if (!customEmoji) {
-                            return `${channel} — Predeterminado`;
+                        const config: string[] = [`${channel}`];
+
+                        // Estado commandless
+
+                        if (isCommandless) {
+                            config.push("Modo commandless: Activado");
                         }
 
-                        return [
-                            `${channel}`,
-                            `Sí: ${emojis.yes}`,
-                            `No: ${emojis.no}`,
-                            `Adicional: ${emojis.shrug ?? "Desactivado"}`
-                        ].join("\n");
+                        // Emojis personalizados
+
+                        if (emojis) {
+                            config.push(
+                                `Sí: ${emojis.yes}`,
+
+                                `No: ${emojis.no}`,
+
+                                `Adicional: ${emojis.shrug ?? "Desactivado"}`
+                            );
+                        } else {
+                            config.push("Emojis: Predeterminados");
+                        }
+
+                        return config.join("\n");
                     })
                 );
 
+                const channelList = channels.filter((channel): channel is string => channel !== null);
+
                 embed.addFields({
-                    name: "Canales commandless",
-                    value: channels.filter((channel): channel is string => channel !== null).join("\n\n")
+                    name: "Configuración de canales",
+
+                    value: channelList.join("\n\n") || "No hay canales disponibles."
                 });
             }
+
+            // ─── Enviar respuesta ──────────────────────────────────
 
             await interaction.reply({
                 embeds: [embed]
@@ -119,6 +152,7 @@ export const command = {
 
             await interaction.reply({
                 content: "❌ No se pudo obtener la configuración del servidor.",
+
                 flags: MessageFlags.Ephemeral
             });
         }
