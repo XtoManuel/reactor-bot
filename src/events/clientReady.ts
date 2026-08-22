@@ -1,6 +1,8 @@
 import { ActivityType, REST, Routes } from "discord.js";
 import { CustomClient } from "../types/CustomClient.js";
 
+import config from "../utils/config.js";
+
 /**
  * Asynchronous function that initializes the client, sets presence, loads slash commands, and handles errors.
  *
@@ -27,12 +29,12 @@ export default async function clientReady(client: CustomClient): Promise<void> {
 
     try {
         // Ensure the token is available before making the REST call
-        if (!process.env.TOKEN) {
-            throw new Error("Bot token not found in environment variables.");
+        if (!config.tokens.discord) {
+            throw new Error("Bot token not found in config.");
         }
 
         // Register slash commands
-        const rest = new REST().setToken(process.env.TOKEN);
+        const rest = new REST().setToken(config.tokens.discord);
         const parsedCommands = Array.from(client.commands.values())
             .filter(cmd => cmd?.data)
             .map(command => command.data);
