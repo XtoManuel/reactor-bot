@@ -16,6 +16,8 @@ import { initializeDatabase } from "./src/database/init.js";
 
 import { CustomClient } from "./src/types/CustomClient.js";
 
+import config from "./src/utils/config.js";
+
 const client = new Client({
     intents: [
         GatewayIntentBits.GuildMessages,
@@ -44,7 +46,7 @@ const client = new Client({
     // Cargar eventos y comandos
     await Promise.all([eventHandler, commandHandler].map(handler => handler(client)));
 
-    await client.login(process.env.TOKEN);
+    await client.login(config.tokens.discord);
 })().catch(error => {
     console.error("Error al iniciar el bot:", error);
 
