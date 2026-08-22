@@ -1,51 +1,74 @@
+// src/events/clientReady.ts
+
 import { ActivityType, REST, Routes } from "discord.js";
-import { CustomClient } from "../types/CustomClient.js";
+
+import type { CustomClient } from "../types/CustomClient.js";
 
 import config from "../utils/config.js";
 
-/**
- * Asynchronous function that initializes the client, sets presence, loads slash commands, and handles errors.
- *
- * @param {CustomClient} client - The client object
- * @return {Promise<void>} A promise that resolves when the function completes
- */
-export default async function clientReady(client: CustomClient): Promise<void> {
-    // Log startup message and send logs
-    const startMessage = `\`🟢\` ¡INICIADO! Iniciado como ${client.user!.username}`;
-    console.log(startMessage.replaceAll("`", ""));
+async function registerCommands(client: CustomClient, rest: REST): Promise<unknown> {
+    const commands = Array.from(client.commands.values())
+        .filter(command => command?.data)
+        .map(command => ({
+            name: command.name,
+            data: command.data.toJSON()
+        }));
 
-    // Set bot presence every 30 seconds (adjust based on your needs)
+    try {
+        return await rest.put(Routes.applicationCommands(client.user!.id), {
+            body: commands.map(command => command.data)
+        });
+    } catch (mainError) {
+        console.error("❌ Error al registrar los slash commands.");
+        console.error(mainError);
+
+        console.log("🔍 Buscando el comando que provoca el error...");
+
+        for (const command of commands) {
+            try {
+                await rest.put(Routes.applicationCommands(client.user!.id), {
+                    body: [command.data]
+                });
+            } catch (commandError) {
+                console.error(`\n❌ Comando problemático: /${command.name}`);
+                console.error(commandError);
+            }
+        }
+
+        throw mainError;
+    }
+}
+
+export default async function clientReady(client: CustomClient): Promise<void> {
+    const startMessage = `🟢 ¡INICIADO! Iniciado como ${client.user!.username}`;
+
+    console.log(startMessage);
+
     setInterval(() => {
         client.user?.setPresence({
             activities: [
                 {
-                    name: "que se portan bien",
-                    type: ActivityType.Watching
+                    name: "/help para obtener ayuda",
+                    type: ActivityType.Custom
                 }
             ],
+
             status: "online"
         });
-    }, 30000); // Adjusted to 30 seconds
+    }, 30000);
 
     try {
-        // Ensure the token is available before making the REST call
         if (!config.tokens.discord) {
             throw new Error("Bot token not found in config.");
         }
 
-        // Register slash commands
         const rest = new REST().setToken(config.tokens.discord);
-        const parsedCommands = Array.from(client.commands.values())
-            .filter(cmd => cmd?.data)
-            .map(command => command.data);
-        const commands = await rest.put(Routes.applicationCommands(client.user!.id), { body: parsedCommands });
 
-        // Log success message
-        const successMessage = `\`✅\` Slash commands cargados: \`${(commands as Array<unknown>).length}\``;
-        console.log(successMessage.replaceAll("`", ""));
+        const commands = await registerCommands(client, rest);
+
+        console.log(`✅ Slash commands cargados: ${(commands as unknown[]).length}`);
     } catch (error) {
-        // Log error message
-        const errorMessage = `\`❌\`	Error al cargar los slash commands:\n\`${error}\``;
-        console.error(errorMessage.replaceAll("`", ""));
+        console.error("❌ Error al cargar los slash commands:");
+        console.error(error);
     }
 }
