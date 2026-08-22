@@ -56,7 +56,7 @@ export const command = {
             await resetPollEmoji(
                 (interaction.client as CustomClient).pool,
 
-                channel.id
+                { channelId: channel.id }
             );
 
             await interaction.reply({

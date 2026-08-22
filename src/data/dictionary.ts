@@ -1,6 +1,9 @@
 // config/commands.ts
 
 export const commands = {
+    config: {
+        desc: "Muestra la configuración actual del servidor."
+    },
     "default-emojis": {
         desc: "Configura los emojis por defecto del servidor.",
 
@@ -12,6 +15,9 @@ export const commands = {
     },
     invite: {
         desc: "Obtén un enlace para invitar al bot."
+    },
+    help: {
+        desc: "Obtén la ayuda del bot."
     },
     ping: {
         desc: "Obtener la latencia del Bot."

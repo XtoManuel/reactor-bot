@@ -65,7 +65,8 @@ export async function createReactionPoll(
         // 3. Si no hay configuración en el canal, usamos
         // los emojis por defecto del servidor.
 
-        const guildEmoji = !channelEmoji && message.guildId ? await getDefaultPollEmoji(client.pool, message.guildId) : null;
+        const guildEmoji =
+            !channelEmoji && message.guildId ? await getDefaultPollEmoji(client.pool, { guildId: message.guildId }) : null;
 
         // 4. Prioridad:
         //

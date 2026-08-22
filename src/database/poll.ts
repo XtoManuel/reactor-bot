@@ -142,7 +142,7 @@ export async function setDefaultPollEmoji(
     );
 }
 
-export async function getDefaultPollEmoji(pool: Pool, guildId: string): Promise<PollEmoji | null> {
+export async function getDefaultPollEmoji(pool: Pool, options: { guildId: string }): Promise<PollEmoji | null> {
     const result = await pool.query<PollEmoji>(
         `
         SELECT
@@ -152,18 +152,36 @@ export async function getDefaultPollEmoji(pool: Pool, guildId: string): Promise<
         FROM guild_poll_emoji
         WHERE guild = $1
         `,
-        [guildId]
+        [options.guildId]
     );
 
     return result.rows[0] ?? null;
 }
 
-export async function resetPollEmoji(pool: Pool, channelId: string): Promise<void> {
+export async function resetPollEmoji(pool: Pool, options: { channelId: string }): Promise<void> {
     await pool.query(
         `
         DELETE FROM poll_emoji
         WHERE channel = $1
         `,
-        [channelId]
+        [options.channelId]
     );
+}
+
+export async function getCommandlessChannels(pool: Pool, options: { guildId: string }): Promise<{ channelId: string }[]> {
+    const result = await pool.query<{
+        channel_id: string;
+    }>(
+        `
+        SELECT channel_id
+        FROM commandless_channels
+        WHERE guild_id = $1
+        ORDER BY channel_id
+    `,
+        [options.guildId]
+    );
+
+    return result.rows.map(row => ({
+        channelId: row.channel_id
+    }));
 }
