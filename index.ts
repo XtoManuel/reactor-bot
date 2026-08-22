@@ -46,6 +46,8 @@ const client = new Client({
     // Cargar eventos y comandos
     await Promise.all([eventHandler, commandHandler].map(handler => handler(client)));
 
+    console.log(config);
+
     await client.login(config.tokens.discord);
 })().catch(error => {
     console.error("Error al iniciar el bot:", error);
