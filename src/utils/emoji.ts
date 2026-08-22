@@ -2,7 +2,7 @@
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { DEFAULT_EMOJIS } from "../config/defaults";
+import { DEFAULT_EMOJIS } from "../config/defaults.js";
 
 export const ASCII_LETTERS = new Set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
 

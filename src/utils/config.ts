@@ -3,7 +3,7 @@
 import { existsSync, readFileSync } from "node:fs";
 
 import { resolve } from "node:path";
-import { Config } from "../types/Config";
+import { Config } from "../types/Config.js";
 
 const configPath = resolve(process.cwd(), "data", "config.json");
 
