@@ -28,7 +28,7 @@ export const command = {
 				{
 					name: "Poll",
 					value:
-						`Uso: \`/poll message\`${config.prefixes.length > 0 ? " o " : ""}${config.prefixes.map((prefix) => `\`${prefix} message\``).join(" o ")}\n` +
+						`Uso: \`/poll message\`${config.prefixes.length > 0 ? " o " : ""}${config.prefixes.map((prefix) => `\`${prefix} message\``).join(" o ")}\n\n` +
 						"Crea una encuesta a partir de un mensaje.\n\n" +
 						"Si el mensaje no contiene opciones, se añadirán las reacciones configuradas para **sí**, **no** y **duda**.\n\n" +
 						"Puedes usar la opción `noshrug` para no añadir la reacción adicional.",
@@ -38,7 +38,7 @@ export const command = {
 				{
 					name: "Multi poll",
 					value:
-						"Uso: `/poll message`\n\n" +
+						`Uso: \`/poll message\`${config.prefixes.length > 0 ? " o " : ""}${config.prefixes.map((prefix) => `\`${prefix} message\``).join(" o ")}\n\n` +
 						"Puedes crear una encuesta con varias opciones escribiendo una opción por línea:\n" +
 						"```text\n" +
 						"Título de la encuesta\n" +
