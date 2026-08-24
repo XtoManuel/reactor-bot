@@ -36,7 +36,7 @@ export default async function messageCreate(
 	}
 
 	if (config.prefixes.some((prefix) => msg.content.startsWith(prefix))) {
-		console.log(prefixes, msg);
+		console.log(config.prefixes, msg);
 
 		await createReactionPoll(client, msg);
 
@@ -59,7 +59,7 @@ export default async function messageCreate(
 		return;
 	}
 
-	console.log("isCommandLess", isCommandless, msg);
+	console.log("isCommandLess", commandless, msg);
 
 	await createReactionPoll(client, msg);
 }
