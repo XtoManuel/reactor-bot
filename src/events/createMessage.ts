@@ -36,7 +36,7 @@ export default async function messageCreate(
 	}
 
 	if (config.prefixes.some((prefix) => msg.content.startsWith(prefix))) {
-		console.log(prefix, msg);
+		console.log(prefixes, msg);
 
 		await createReactionPoll(client, msg);
 
