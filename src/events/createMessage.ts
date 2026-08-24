@@ -10,41 +10,56 @@ import type { CustomClient } from "../types/CustomClient.js";
 
 import config from "../utils/config.js";
 
-const COMMANDLESS_DISABLE_EMOJIS = ["💬", "🗨️", "<:pensive_speech_balloon:555620427742052365>"];
+const COMMANDLESS_DISABLE_EMOJIS = [
+	"💬",
+	"🗨️",
+	"<:pensive_speech_balloon:555620427742052365>",
+];
 
-export default async function messageCreate(client: CustomClient, msg: Message) {
-    // Ignorar mensajes de bots
-    if (msg.author.bot) {
-        return;
-    }
+export default async function messageCreate(
+	client: CustomClient,
+	msg: Message,
+) {
+	// Ignorar mensajes de bots
+	if (msg.author.bot) {
+		return;
+	}
 
-    // Solo funcionar dentro de servidores
-    if (!msg.guild) {
-        return;
-    }
+	// Solo funcionar dentro de servidores
+	if (!msg.guild) {
+		return;
+	}
 
-    // Solo canales de texto
-    if (!msg.channel.isTextBased()) {
-        return;
-    }
+	// Solo canales de texto
+	if (!msg.channel.isTextBased()) {
+		return;
+	}
 
-    if (config.prefixes.some(prefix => msg.content.startsWith(prefix))) {
-        await createReactionPoll(client as CustomClient, msg);
+	if (config.prefixes.some((prefix) => msg.content.startsWith(prefix))) {
+		console.log(prefix, msg);
 
-        return;
-    }
+		await createReactionPoll(client, msg);
 
-    // Estos emojis permiten enviar un mensaje normal
-    // dentro de un canal command.
-    if (COMMANDLESS_DISABLE_EMOJIS.some(emoji => msg.content.startsWith(emoji))) {
-        return;
-    }
+		return;
+	}
 
-    const commandless = await isCommandlessChannel(client.pool, { channelId: msg.channel.id });
+	// Estos emojis permiten enviar un mensaje normal
+	// dentro de un canal command.
+	if (
+		COMMANDLESS_DISABLE_EMOJIS.some((emoji) => msg.content.startsWith(emoji))
+	) {
+		return;
+	}
 
-    if (!commandless) {
-        return;
-    }
+	const commandless = await isCommandlessChannel(client.pool, {
+		channelId: msg.channel.id,
+	});
 
-    await createReactionPoll(client, msg);
+	if (!commandless) {
+		return;
+	}
+
+	console.log("isCommandLess", isCommandless, msg);
+
+	await createReactionPoll(client, msg);
 }
