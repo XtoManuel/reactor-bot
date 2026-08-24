@@ -20,8 +20,6 @@ export default async function messageCreate(
 	client: CustomClient,
 	msg: Message,
 ) {
-	console.log("Message creado", msg, typeof msg);
-
 	// Ignorar mensajes de bots
 	if (msg.author.bot) {
 		return;
@@ -39,8 +37,6 @@ export default async function messageCreate(
 
 	if (config.prefixes.some((prefix) => msg.content.startsWith(prefix))) {
 		console.log(config.prefixes, msg);
-
-		await createReactionPoll(client, msg);
 
 		return;
 	}
@@ -60,8 +56,6 @@ export default async function messageCreate(
 	if (!commandless) {
 		return;
 	}
-
-	console.log("isCommandLess", commandless, msg);
 
 	await createReactionPoll(client, msg);
 }
