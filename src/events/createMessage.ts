@@ -20,6 +20,9 @@ export default async function messageCreate(
 	client: CustomClient,
 	msg: Message,
 ) {
+
+	console.log("Message creado", msg, type(msg))
+
 	// Ignorar mensajes de bots
 	if (msg.author.bot) {
 		return;
